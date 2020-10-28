@@ -40,61 +40,32 @@ app.use(session({
   store: new FileStore()
 }));
 
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
 function auth(req, res, next) {
   console.log(req.session);
   if (!req.session.user) {
-    var authHeader = req.headers.authorization;
-
-    if (!authHeader) {
       var err = new Error('You are not authorized!');
-
-      res.setHeader('WWW-Authenticate', 'Basic');
       err.status = 401;
       return next(err);
-    }
-
-    var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
-
-    var username = auth[0];
-    var password = auth[1];
-
-    console.log(username);
-    console.log(password);
-
-    if (username === 'admin' && password === 'password') {
-      req.session.user = 'admin';
-      next();
-    }
-
-    else {
-      var err = new Error('You are not authorized!');
-
-      res.setHeader('WWW-Authenticate', 'Basic');
-      err.status = 401;
-      return next(err);
-    }
   }
-
   else {
-    if(req.session.user === 'admin'){
+    if(req.session.user === 'authenticated'){
       next();
     }
     else {
       var err = new Error('You are not authorized!');
-
-      err.status = 401;
+      err.status = 403;
       return next(err);
     }
   }
-
-
 }
 app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+
 app.use('/dishes', dishRouter);
 app.use('/leaders', leaderRouter);
 app.use('/promotions', promoRouter);
